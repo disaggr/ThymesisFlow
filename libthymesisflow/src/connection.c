@@ -216,7 +216,7 @@ int setup_afu_memory(connection *conn) {
     ocxl_enable_messages(OCXL_ERRORS | OCXL_TRACING);
 
     log_info_ext("Enabling network\n");
-    rc = ocxl_mmio_write64(conn->global, 0x78, OCXL_MMIO_LITTLE_ENDIAN, 0x1);
+    rc = ocxl_mmio_write64(conn->global, 0x78, OCXL_MMIO_LITTLE_ENDIAN, 0x2);
     if (rc != OCXL_OK) {
         log_error_ext("Failed enabling network\n");
         return ERR_ENABLING_NETWORK;
