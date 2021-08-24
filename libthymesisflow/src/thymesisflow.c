@@ -17,6 +17,7 @@
 /// @file thymesisflow.c
 #include "thymesisflow.h"
 #include <fcntl.h>
+#include <sys/mman.h>
 
 int unplug_memory_blocks(const uint64_t memory_size) {
 
@@ -122,6 +123,29 @@ int detach_compute(const char *circuit_id) {
     return res;
 }
 
+static void *allocate_from_file_aligend(size_t size, size_t alignment) {
+    int fd = open("/tmp/qemu-ram", O_RDWR);
+    if (fd == -1) {
+        printf("Could not open /tmp/qemu-ram\n");
+        return NULL;
+    }
+
+    size_t address = alignment;
+
+    while (address >= alignment) {
+        void *result = mmap((void *)address, size, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_FIXED, fd, 0);
+        if (result != MAP_FAILED) {
+            printf("Allocated aligned from /tmp/qemu-ram\n");
+            close(fd);
+            return result;
+        }
+
+        address += alignment;
+    }
+    close(fd);
+    return NULL;
+}
+
 int attach_memory(const char *circuit_id, const char *afu_name,
                   iport_list *ports, const uint64_t size, uint64_t *eaptr) {
 
@@ -143,7 +167,8 @@ int attach_memory(const char *circuit_id, const char *afu_name,
 #else
 
     log_info_ext("Allocating aligned memory\n");
-    if (posix_memalign((void **)&conn->ea, CACHE_ALIGNMENT, size) != 0) {
+    conn->ea = allocate_from_file_aligend(size, CACHE_ALIGNMENT);
+    if (conn->ea != NULL) {
         log_error_ext("unable to allocate %ld bytes memory\n", size);
         return 1;
     }
