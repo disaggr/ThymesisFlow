@@ -74,7 +74,7 @@ int detach_memory(const char *circuit_id) {
             "ref pointer \n",
             circuit_id);
     } else {
-        free(conn->ea);
+        munmap(conn->ea, conn->size);
     }
 
     // delete connection
@@ -126,20 +126,28 @@ int detach_compute(const char *circuit_id) {
 static void *allocate_from_file_aligend(size_t size, size_t alignment) {
     int fd = open("/tmp/qemu-ram", O_RDWR);
     if (fd == -1) {
-        printf("Could not open /tmp/qemu-ram\n");
+        log_error_ext("Could not open /tmp/qemu-ram\n");
         return NULL;
     }
+
+    log_info_ext("/tmp/qemu-ram opened\n");
 
     size_t address = alignment;
 
     while (address >= alignment) {
-        void *result = mmap((void *)address, size, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_FIXED, fd, 0);
-        if (result != MAP_FAILED) {
-            printf("Allocated aligned from /tmp/qemu-ram\n");
+        void *result = mmap((void *)address, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+        if ((size_t)result == address) {
+            log_info_ext("Allocated aligned from /tmp/qemu-ram\n");
             close(fd);
             return result;
         }
 
+        if (result == MAP_FAILED) {
+            log_error_ext("MMAP failed\n");
+            return NULL;
+        }
+
+        munmap(result, size);
         address += alignment;
     }
     close(fd);
