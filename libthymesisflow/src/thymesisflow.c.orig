@@ -18,7 +18,6 @@
 #include "thymesisflow.h"
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <errno.h>
 
 int unplug_memory_blocks(const uint64_t memory_size) {
 
@@ -125,36 +124,32 @@ int detach_compute(const char *circuit_id) {
 }
 
 static void *allocate_from_file_aligend(size_t size, size_t alignment) {
-    int fd = open("/dev/shm/qemu-ram", O_RDWR);
+    int fd = open("/tmp/qemu-ram", O_RDWR);
     if (fd == -1) {
-        log_error_ext("Could not open /dev/shm/qemu-ram\n");
+        log_error_ext("Could not open /tmp/qemu-ram\n");
         return NULL;
     }
 
-    log_info_ext("/dev/shm/qemu-ram opened\n");
+    log_info_ext("/tmp/qemu-ram opened\n");
 
-    size_t address = 0x100000000;
+    size_t address = alignment;
 
     while (address >= alignment) {
         void *result = mmap((void *)address, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-        if ((size_t)result % alignment == 0) {
-            log_info_ext("Allocated aligned from /dev/shm/qemu-ram at %p\n", result);
+        if ((size_t)result == address) {
+            log_info_ext("Allocated aligned from /tmp/qemu-ram\n");
             close(fd);
             return result;
         }
 
         if (result == MAP_FAILED) {
-            log_error_ext("MMAP failed: %i\n", errno);
+            log_error_ext("MMAP failed\n");
             return NULL;
         }
 
         munmap(result, size);
         address += alignment;
     }
-
-
-    log_info_ext("Unable to find address to map memory file\n");
-
     close(fd);
     return NULL;
 }
