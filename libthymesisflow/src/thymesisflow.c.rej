@@ -1,0 +1,22 @@
+--- libthymesisflow/src/thymesisflow.c
++++ libthymesisflow/src/thymesisflow.c
+@@ -183,15 +190,16 @@ int attach_memory(const char *circuit_id, const char *afu_name,
+ 
+     log_info_ext("Allocating aligned memory\n");
+     conn->ea = allocate_from_file_aligend(size, CACHE_ALIGNMENT);
+-    if (conn->ea != NULL) {
++    if (conn->ea == NULL) {
+         log_error_ext("unable to allocate %ld bytes memory\n", size);
+         return 1;
+     }
++    /*errno = 0;
+     if (mlock(conn->ea, size) < 0) {
+         // error mem lock ERR_MLOCK
+-        log_error_ext("cannot mlock memory for circuit - %s\n", circuit_id);
++        log_error_ext("cannot mlock memory for circuit - %s errno: %s\n", circuit_id, strerror(errno));
+         return 1;
+-    }
++    }*/
+ 
+     log_info_ext("memsetting to zero\n");
+     memset(conn->ea, '\0', size);
