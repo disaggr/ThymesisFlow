@@ -26,12 +26,12 @@ void helper_memory_attach() {
     fprintf(stderr,
             "    --size MEMORY_SIZE\n\t\t in bytes (bigger than zero) and "
             "multiple of MEMBLOCK_SIZE (%d)\n",
-            MEMBLOCK_SIZE);
+            config.MEMBLOCK_SIZE);
     // fprintf(stderr,"  --port PORT_NUMBER\n\t\t AFU port to be used (example:
     // 1 or 2)\n");
 }
 
-int valid_mem_size(uint64_t size) { return (size % MEMBLOCK_SIZE == 0); }
+int valid_mem_size(uint64_t size) { return (size % config.MEMBLOCK_SIZE == 0); }
 
 int handle_memory_attach(const char *cid, const char *afu, const iport_list *pl,
                          const uint64_t size, const char *sock_path) {
@@ -44,7 +44,7 @@ int handle_memory_attach(const char *cid, const char *afu, const iport_list *pl,
     if (!valid_mem_size(size)) {
         log_info(
             "Memory allocation needs to be a multiple of MEMBLOCK_SIZE (%d)\n",
-            MEMBLOCK_SIZE);
+            config.MEMBLOCK_SIZE);
         helper_memory_attach();
         return EXIT_FAILURE;
     }
@@ -91,7 +91,7 @@ int handle_compute_attach(const char *cid, const char *afu,
     if (!valid_mem_size(size)) {
         log_info(
             "Memory allocation needs to be a multiple of MEMBLOCK_SIZE (%u)\n",
-            MEMBLOCK_SIZE);
+            config.MEMBLOCK_SIZE);
         helper_memory_attach();
         return EXIT_FAILURE;
     }
