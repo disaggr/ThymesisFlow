@@ -172,7 +172,7 @@ int attach_memory(const char *circuit_id, const char *afu_name,
     memset(conn->ea, '\0', size);
 
     int open_res = 0;
-    if ((open_res = setup_afu_memory(conn)) != 0) {
+    if ((open_res = setup_afu_memory(conn, ports)) != 0) {
         return open_res;
     }
 

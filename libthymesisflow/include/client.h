@@ -23,9 +23,6 @@
 #include "logger.h"
 #include "proto.h"
 
-// fixed afu port in current design
-#define AFU_PORT 2
-
 /**
  *  Send setup request to the memory node daemon through the linux socket
  *
