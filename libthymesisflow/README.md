@@ -28,7 +28,10 @@ sudo apt-get install libocxl-dev
 Build the library as following in case you want to test client and server interactions
 
 ```
-make MOCK=1
+mkdir build
+cd build
+cmake .. -DMOCK=1
+make
 ```
 
 Add `DEBUG=1` for debugging information
@@ -37,17 +40,12 @@ Add `DEBUG=1` for debugging information
 
 The following steps describe how to setup and run unit tests.
 
-The first step requires to build unit tests.
-
-```
-make MOCK=1
-make MOCK=1 tests
-```
+The first step requires to build Mock (see above).
 
 To launch unit tests, run the following command.
 
 ```
-./testbin/unittest
+make test
 ```
 
 
@@ -61,6 +59,9 @@ While the [mock](#build-mock) build is used for testing, in this scenario each r
 For this scenario, recompile agent and CLI as following. 
 
 ```
+mkdir build
+cd build
+cmake .. -DMOCK=0
 make
 ```
 
@@ -69,7 +70,7 @@ make
 On both Compute and Memory side you can now run the server process. 
 
 ```
-sudo ./bin/thymesisf-agent -s <SOCKET_PATH>
+sudo ./thymesisf-agent -s <SOCKET_PATH>
 ```
 
 Where `SOCKET_PATH` is the path of the UNIX stream socket. 
@@ -81,7 +82,7 @@ The default value is `/tmp/thymesisflow.sock`.
 On the **Memory node** you can reserve memory as following:
 
 ```
-sudo ./bin/thymesisf-cli attach-memory \
+sudo ./thymesisf-cli attach-memory \
     --afu <AFU_NAME> \
     --cid <CIRCUIT_ID> \
     --size <MEMORY_SIZE>
@@ -107,7 +108,7 @@ An output example:
 On the **Compute node** we can now attach the remote memory as following:
 
 ```
-sudo ./bin/thymesisf-cli attach-compute \
+sudo ./thymesisf-cli attach-compute \
     --afu <AFU_NAME> \
     --cid <CIRCUIT_ID> \
     --size <MEMORY_SIZE> \
@@ -150,19 +151,19 @@ Once the connection is not needed anymore, we can release the preallocated resou
 #### Detach Compute side
 
 ```
-sudo ./bin/thymesisf-cli detach-compute --cid <CIRCUIT_ID>
+sudo ./thymesisf-cli detach-compute --cid <CIRCUIT_ID>
 ```
 
 #### Detach Memory side
 
 ```
-sudo ./bin/thymesisf-cli detach-compute --cid <CIRCUIT_ID>
+sudo ./thymesisf-cli detach-compute --cid <CIRCUIT_ID>
 ```
 
 #### Run agent in a Docker container
 
 ```
-make docker
+docker build --network=host -t thymesisflow:`git rev-parse --abbrev-ref HEAD` .
 docker run -it --privileged \
 	--mount type=bind,source=/dev/ocxl,target=/dev/ocxl \
 	--mount type=bind,source=/tmp,target=/tmp \
