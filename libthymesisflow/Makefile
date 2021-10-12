@@ -76,7 +76,7 @@ docker:
 	docker build --network=host -t thymesisflow:$(GIT_VERSION) .
 
 
-.PHONY: all clean clean_tests cmds tests docs
+.PHONY: all clean clean_tests cmds tests docs install
 
 cscope:
 	find ./* -type f \( -name \*.c -o -name \*.h \) > ./cscope.files
@@ -88,4 +88,9 @@ clean:
 	rm -rf cscope.in.out
 	rm -rf cscope.out
 	rm -rf cscope.po.out
+
+install: all
+	install -d $(DESTDIR)$(PREFIX)/bin
+	install -m 755 bin/thymesisf-agent bin/thymesisf-cli $(DESTDIR)$(PREFIX)/bin/
+	install thymesisf-agent@.service /etc/systemd/system/thymesisf-agent@.service
 
