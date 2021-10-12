@@ -196,5 +196,6 @@ int main(int argc, char const *argv[]) {
     test_integration();
 #else
     log_warn("Unit test are available only with MOCK=1\n");
+    return 1;
 #endif
 }
