@@ -207,6 +207,7 @@ int main(int argc, char **argv) {
         {"cid", required_argument, 0, 'c'},
         {"no-hotplug", no_argument, &no_hotplug, 1},
         {"port",required_argument,0,'p'},
+        {0,0,0,0},
     };
 
     while (1) {
