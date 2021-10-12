@@ -28,5 +28,9 @@ if (MOCK)
 	add_compile_definitions(MOCK=1)
 endif()
 
+include(GNUInstallDirs)
+install(TARGETS thymesisf-cli thymesisf-agent)
+install(FILES thymesisf-agent@.service DESTINATION etc/systemd/system)
+
 enable_testing()
 add_test(unittest unittest)
