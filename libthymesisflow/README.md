@@ -65,7 +65,7 @@ cmake .. -DMOCK=0
 make
 ```
 
-**Note:** use `DEBUG=1` for debugging information
+**Note:** use `-DCMAKE_BUILD_TYPE=Debug` for debugging information
 
 On both Compute and Memory side you can now run the server process. 
 
