@@ -196,7 +196,6 @@ int attach_memory(const char *circuit_id, const char *afu_name,
 
     log_info_ext("Allocating aligned memory\n");
     conn->ea = allocate_from_file_aligend(size, config.CACHE_ALIGNMENT);
-    if (conn->ea == NULL) {
     //TODO: implement switch to choose wether to malloc or to shmem
     //conn->ea = allocate_from_file_aligend(size, CACHE_ALIGNMENT);
     if (conn->ea == NULL) {
