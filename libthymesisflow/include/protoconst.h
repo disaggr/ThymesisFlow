@@ -35,6 +35,12 @@ Possible messages:
  */
 #define SOCK_PATH "/tmp/thymesisflow.sock"
 
+/*! \def    SOCK_GRP
+ * \brief default group name used for communication with libthymesisflow
+ * server
+ */
+#define SOCK_GRP "ocxl"
+
 /*! \def CIRCUIT_ID_SIZE
  * \brief circuit uuid lenght
  */

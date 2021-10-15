@@ -32,21 +32,16 @@
 #include "libocxl.h"
 #endif
 
-#define GLOBAL_MMIO_REG_COUNT (0x300 / 8)
-
-#define CTRL_REG 0x000
-
-#define INIT_PROBE_ADDR 0x2000000000000
-
-#define AFU_NAME "IBM,RMEM"
-
-#define MEMBLOCK_SIZE 0x10000000
-
-#define PROBE_PATH "/sys/devices/system/memory/probe"
-
-#define MEMORY_PATH "/sys/devices/system/memory"
-
-#define CACHE_ALIGNMENT 128
+extern struct thymesisflow_config {
+	short GLOBAL_MMIO_REG_COUNT;
+	short CTRL_REG;
+	uint64_t INIT_PROBE_ADDR;
+	char *AFU_NAME;
+	int MEMBLOCK_SIZE;
+	char *PROBE_PATH;
+	char *MEMORY_PATH;
+	int CACHE_ALIGNMENT;
+} config;
 
 /**
  *  Setup AFU and allocate memory

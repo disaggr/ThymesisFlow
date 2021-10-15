@@ -20,9 +20,7 @@
 uint64_t calculate_seg_offset(const uint64_t ea_base, const uint64_t seg_offset,
                               const uint64_t netid) {
     uint64_t offset;
-
     offset = ea_base - seg_offset;
-
     return (offset ^ netid);
 }
 
@@ -61,6 +59,7 @@ int add_conn(connection *conn) {
         return CONN_NULL;
     }
 
+    // TODO: Fail if we detect a duplicate?
     if (get_conn(conn->circuit_id) != NULL) {
         log_warn("not allowed to replicate the connection - %s\n",
                  conn->circuit_id);
@@ -127,7 +126,7 @@ int setup_afu_compute(connection *conn, uint64_t effective_addr,
                       iport_list *ports) {
 #ifndef MOCK
     ocxl_err rc = ocxl_afu_open(conn->afu_name, &(conn->afu));
-    if (OCXL_OK != rc) {
+    if (rc != OCXL_OK) {
         log_error_ext("Could not open AFU '%s' error code %d\n", conn->afu_name,
                       rc);
         return ERR_AFU_OPEN;
@@ -168,34 +167,35 @@ int setup_afu_compute(connection *conn, uint64_t effective_addr,
     return 0;
 }
 
-int setup_afu_memory(connection *conn) {
+int setup_afu_memory(connection *conn, iport_list *ports) {
 #ifndef MOCK
-    // open connection to AFU
-    if (OCXL_OK != ocxl_afu_open(conn->afu_name, &(conn->afu))) {
-        log_error("Could not open AFU '%s'\n", conn->afu_name);
+    ocxl_err rc = ocxl_afu_open(conn->afu_name, &(conn->afu));
+    if (OCXL_OK != rc) {
+        log_error_ext("Could not open AFU '%s' error code %d\n", conn->afu_name,
+                      rc);
         return ERR_AFU_OPEN;
     }
 
     // Enable per-AFU verbose messages
     /*ocxl_afu_enable_messages((conn->afu), OCXL_ERRORS | OCXL_TRACING);*/
-    log_info_ext("attaching afu to address space\n");
-    if (OCXL_OK != ocxl_afu_attach((conn->afu), OCXL_ATTACH_FLAGS_NONE)) {
-        log_error_ext("Could not attach afu");
+    log_info_ext("Attaching afu to address space\n");
+    rc = ocxl_afu_attach((conn->afu), OCXL_ATTACH_FLAGS_NONE);
+    if (rc != OCXL_OK) {
+        log_error_ext("Could not attach afu error code %d\n", rc);
         return ERR_AFU_ATTACH;
     }
 
-    log_info_ext("mappin global mmio space\n");
-    if (OCXL_OK !=
-        ocxl_mmio_map((conn->afu), OCXL_GLOBAL_MMIO, &conn->global)) {
-        log_error_ext("Could not map the AFU MMIO region");
+    log_info_ext("Mapping global mmio space\n");
+    rc = ocxl_mmio_map((conn->afu), OCXL_GLOBAL_MMIO, &conn->global);
+    if (rc != OCXL_OK) {
+        log_error_ext("Could not map the AFU MMIO region error code %d\n", rc);
         return ERR_MMIO_MAP_GLOBAL;
     }
 
     log_info_ext("mapping per process mmio space\n");
-    ocxl_err rc =
-        ocxl_mmio_map(conn->afu, OCXL_PER_PASID_MMIO, &(conn->pp_mmio));
+    rc = ocxl_mmio_map(conn->afu, OCXL_PER_PASID_MMIO, &(conn->pp_mmio));
     if (rc != OCXL_OK) {
-        log_error_ext("Could not map per process local MMIO region");
+        log_error_ext("Could not map per process local MMIO region error code %d\n", rc);
         return ERR_MMIO_MAP_LOCAL;
     }
 
@@ -207,18 +207,17 @@ int setup_afu_memory(connection *conn) {
     ctrl.reg.enable_pipeline = 0;
 
     log_info_ext("enabling and sending assign tag cmd\n");
-    rc =
-        ocxl_mmio_write64(conn->global, 0x0, OCXL_MMIO_LITTLE_ENDIAN, ctrl.val);
+    rc = ocxl_mmio_write64(conn->global, MEM_SEG0_OFFSET, OCXL_MMIO_LITTLE_ENDIAN, ctrl.val);
     if (rc != OCXL_OK) {
-        log_error_ext("Failed to write ctrl register\n");
+        log_error_ext("Failed to write ctrl register error code %d\n", rc);
         return ERR_WRITE_CTRL_REGISTER;
     }
     ocxl_enable_messages(OCXL_ERRORS | OCXL_TRACING);
 
     log_info_ext("Enabling network\n");
-    rc = ocxl_mmio_write64(conn->global, 0x78, OCXL_MMIO_LITTLE_ENDIAN, 0x2);
+    rc = ocxl_mmio_write64(conn->global, AURORA_CTRL, OCXL_MMIO_LITTLE_ENDIAN, ports->nport);
     if (rc != OCXL_OK) {
-        log_error_ext("Failed enabling network\n");
+        log_error_ext("Failed enabling network error code %d\n", rc);
         return ERR_ENABLING_NETWORK;
     }
 
@@ -226,6 +225,7 @@ int setup_afu_memory(connection *conn) {
     return 0;
 }
 
+// TODO Add command for listing current connections
 void list_connections() {
     log_info_ext("--- BEGIN list circuits ---\n");
     connection *runner = clist;

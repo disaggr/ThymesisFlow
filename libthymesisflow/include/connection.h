@@ -131,7 +131,7 @@ connection *new_conn(const char *circuit_id, const char *afu_name,
 int setup_afu_compute(connection *conn, uint64_t effective_addr,
                       iport_list *ports);
 
-int setup_afu_memory(connection *conn);
+int setup_afu_memory(connection *conn, iport_list *ports);
 
 #define CONN_SUCCESS 0
 

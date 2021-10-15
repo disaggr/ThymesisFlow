@@ -26,12 +26,11 @@ void helper_memory_attach() {
     fprintf(stderr,
             "    --size MEMORY_SIZE\n\t\t in bytes (bigger than zero) and "
             "multiple of MEMBLOCK_SIZE (%d)\n",
-            MEMBLOCK_SIZE);
-    // fprintf(stderr,"  --port PORT_NUMBER\n\t\t AFU port to be used (example:
-    // 1 or 2)\n");
+            config.MEMBLOCK_SIZE);
+    fprintf(stderr,"  --port PORT_NUMBER\n\t\t AFU port to be used (example: 1 or 2)\n");
 }
 
-int valid_mem_size(uint64_t size) { return (size % MEMBLOCK_SIZE == 0); }
+int valid_mem_size(uint64_t size) { return (size % config.MEMBLOCK_SIZE == 0); }
 
 int handle_memory_attach(const char *cid, const char *afu, const iport_list *pl,
                          const uint64_t size, const char *sock_path) {
@@ -44,7 +43,7 @@ int handle_memory_attach(const char *cid, const char *afu, const iport_list *pl,
     if (!valid_mem_size(size)) {
         log_info(
             "Memory allocation needs to be a multiple of MEMBLOCK_SIZE (%d)\n",
-            MEMBLOCK_SIZE);
+            config.MEMBLOCK_SIZE);
         helper_memory_attach();
         return EXIT_FAILURE;
     }
@@ -71,8 +70,7 @@ void helper_compute_attach() {
     fprintf(stderr, "    --cid CIRCUIT_UUID  \n\t\tCircuit Identifier\n");
     fprintf(stderr,
             "    --size MEMORY_SIZE\n\t\t in bytes (bigger than zero)\n");
-    // fprintf(stderr,"  --port PORT_NUMBER\n\t\t AFU port to be used (example:
-    // 1 or 2)\n");
+    fprintf(stderr,"  --port PORT_NUMBER\n\t\t AFU port to be used (example: 1 or 2)\n");
     fprintf(stderr,
             "    --ea EFFECTIVE_ADDRESS\n\t\t effective address printed "
             "by the lender\n");
@@ -91,7 +89,7 @@ int handle_compute_attach(const char *cid, const char *afu,
     if (!valid_mem_size(size)) {
         log_info(
             "Memory allocation needs to be a multiple of MEMBLOCK_SIZE (%u)\n",
-            MEMBLOCK_SIZE);
+            config.MEMBLOCK_SIZE);
         helper_memory_attach();
         return EXIT_FAILURE;
     }
@@ -208,7 +206,8 @@ int main(int argc, char **argv) {
         {"ea", required_argument, 0, 'e'},
         {"cid", required_argument, 0, 'c'},
         {"no-hotplug", no_argument, &no_hotplug, 1},
-        //{"port",required_argument,0,'p'},
+        {"port",required_argument,0,'p'},
+        {0,0,0,0},
     };
 
     while (1) {
@@ -235,11 +234,14 @@ int main(int argc, char **argv) {
         case 'c':
             cid = optarg;
             break;
+	case 'p':
+	    pl = add_port(pl, strtoull(optarg, NULL, 10));
+	    break;
         }
     }
 
     // Fixed port 2
-    pl = add_port(pl, AFU_PORT);
+    //pl = add_port(pl, AFU_PORT);
 
     if (sock_path == NULL) {
         sock_path = SOCK_PATH;

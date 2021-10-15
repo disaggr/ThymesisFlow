@@ -5,6 +5,6 @@ MAINTAINER michele.gazzetti1@ibm.com
 RUN apt-get update && \
 	apt-get install -y libocxl-dev
 
-COPY ./bin/thymesisf-agent /usr/bin/
+COPY ./build/thymesisf-agent /usr/bin/
 	
 ENTRYPOINT ["/usr/bin/thymesisf-agent"]

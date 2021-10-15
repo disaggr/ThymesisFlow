@@ -1,0 +1,7 @@
+[Unit]
+Description="ThymesisFlow Agent running on Node %i"
+PartOf=thymesisf-agent.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/numactl --membind=%i --cpunodebind=%i /opt/thymesisflow/bin/thymesisf-agent

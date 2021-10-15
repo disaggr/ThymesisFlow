@@ -175,7 +175,7 @@ int set_size(char *msg, uint64_t size) {
         return ERR_MSGNULL;
     if (size <= 0)
         return ERR_INT_PARAM;
-    if (size % MEMBLOCK_SIZE != 0)
+    if (size % config.MEMBLOCK_SIZE != 0)
         return ERR_MEMBLOCK_SIZE;
 
     memcpy(msg + MEM_SIZE_OFFSET, &size, MEM_SIZE);

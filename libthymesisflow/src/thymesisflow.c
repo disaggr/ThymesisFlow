@@ -20,18 +20,33 @@
 #include <sys/mman.h>
 #include <errno.h>
 
+char afu_name[] = "IBM,RMEM";
+char probe_path[] = "/sys/devices/system/memory/probe";
+char memory_path[] =  "/sys/devices/system/memory";
+
+struct thymesisflow_config config = {
+	.GLOBAL_MMIO_REG_COUNT = (0x300 / 8),
+	.CTRL_REG = 0x000,
+	.INIT_PROBE_ADDR = 0x2200000000000,
+	.AFU_NAME = afu_name,
+	.MEMBLOCK_SIZE = 0x10000000,
+	.PROBE_PATH = probe_path,
+	.MEMORY_PATH = memory_path,
+	.CACHE_ALIGNMENT = 128
+};
+
 int unplug_memory_blocks(const uint64_t memory_size) {
 
-    uint64_t probe_addr = INIT_PROBE_ADDR;
+    uint64_t probe_addr = config.INIT_PROBE_ADDR;
 
     char *offline_command = "offline";
-    for (int i = 0; i < memory_size / MEMBLOCK_SIZE;
-         i++, probe_addr += MEMBLOCK_SIZE) {
+    for (int i = 0; i < memory_size / config.MEMBLOCK_SIZE;
+         i++, probe_addr += config.MEMBLOCK_SIZE) {
         char offline_buff[128];
 
         snprintf(offline_buff, sizeof(offline_buff),
                  "/sys/devices/system/memory/memory%lu/state",
-                 probe_addr / MEMBLOCK_SIZE);
+                 probe_addr / config.MEMBLOCK_SIZE);
 
         // log_info("offlining - %s\n", offline_buff);
 
@@ -169,7 +184,7 @@ int attach_memory(const char *circuit_id, const char *afu_name,
 #ifdef MOCK
     log_info_ext("mocking memory connection by allocating only 256 MB...\n");
 
-    if (posix_memalign((void **)&conn->ea, CACHE_ALIGNMENT, (256 >> 20)) != 0) {
+    if (posix_memalign((void **)&conn->ea, config.CACHE_ALIGNMENT, (256 >> 20)) != 0) {
         log_error_ext("unable to allocate %ld bytes memory\n", size);
         return 1;
     }
@@ -195,7 +210,7 @@ int attach_memory(const char *circuit_id, const char *afu_name,
     memset(conn->ea, '\0', size);
 
     int open_res = 0;
-    if ((open_res = setup_afu_memory(conn)) != 0) {
+    if ((open_res = setup_afu_memory(conn, ports)) != 0) {
         return open_res;
     }
 
@@ -212,21 +227,21 @@ int hotplug_memory_blocks(uint64_t memory_size) {
 
     char file_buff[128];
 
-    uint64_t probe_addr = INIT_PROBE_ADDR;
+    uint64_t probe_addr = config.INIT_PROBE_ADDR;
 
     char *online_command = "online_movable";
-    for (int i = 0; i < memory_size / MEMBLOCK_SIZE;
-         i++, probe_addr += MEMBLOCK_SIZE) {
+    for (int i = 0; i < memory_size / config.MEMBLOCK_SIZE;
+         i++, probe_addr += config.MEMBLOCK_SIZE) {
 
-        snprintf(file_buff, sizeof(file_buff), "%s/memory%lu", MEMORY_PATH,
-                 probe_addr / MEMBLOCK_SIZE);
+        snprintf(file_buff, sizeof(file_buff), "%s/memory%lu", config.MEMORY_PATH,
+                 probe_addr / config.MEMBLOCK_SIZE);
 
         if (access(file_buff, F_OK) == -1) {
             // file does not exist
-            FILE *fd = fopen(PROBE_PATH, "w");
+            FILE *fd = fopen(config.PROBE_PATH, "w");
 
             if (fd == NULL) {
-                log_error_ext("error opening probe file: %s\n", PROBE_PATH);
+                log_error_ext("error opening probe file: %s\n", config.PROBE_PATH);
             } else {
                 int res = fprintf(fd, "%lu", probe_addr);
                 if (res <= 0) {
@@ -242,7 +257,7 @@ int hotplug_memory_blocks(uint64_t memory_size) {
 
         snprintf(online_buff, sizeof(online_buff),
                  "/sys/devices/system/memory/memory%lu/state",
-                 probe_addr / MEMBLOCK_SIZE);
+                 probe_addr / config.MEMBLOCK_SIZE);
 
         if (access(online_buff, W_OK) == -1) {
 
