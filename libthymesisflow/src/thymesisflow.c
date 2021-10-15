@@ -195,7 +195,7 @@ int attach_memory(const char *circuit_id, const char *afu_name,
 #else
 
     log_info_ext("Allocating aligned memory\n");
-    conn->ea = allocate_from_file_aligend(size, CACHE_ALIGNMENT);
+    conn->ea = allocate_from_file_aligend(size, config.CACHE_ALIGNMENT);
     if (conn->ea == NULL) {
         log_error_ext("unable to allocate %ld bytes memory\n", size);
         return 1;
