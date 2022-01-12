@@ -90,7 +90,7 @@ int detach_memory(const char *circuit_id) {
             "ref pointer \n",
             circuit_id);
     } else {
-        free(conn->ea);
+        munmap(conn->ea, conn->size);
     }
 
     // delete connection
