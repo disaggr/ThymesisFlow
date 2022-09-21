@@ -140,20 +140,20 @@ int detach_compute(const char *circuit_id) {
 }
 
 static void *allocate_from_file_aligend(size_t size, size_t alignment) {
-    int fd = open("/dev/shm/qemu-ram", O_RDWR);
+    int fd = open("/dev/mishmem-s1", O_RDWR);
     if (fd == -1) {
-        log_error_ext("Could not open /dev/shm/qemu-ram\n");
+        log_error_ext("Could not open /dev/mishmem-s1\n");
         return NULL;
     }
 
-    log_info_ext("/dev/shm/qemu-ram opened\n");
+    log_info_ext("/dev/mishmem-s1 opened\n");
 
     size_t address = 0x100000000;
 
     while (address >= alignment) {
         void *result = mmap((void *)address, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
         if ((size_t)result % alignment == 0) {
-            log_info_ext("Allocated aligned from /dev/shm/qemu-ram at %p\n", result);
+            log_info_ext("Allocated aligned from /dev/mishmem-s1 at %p\n", result);
             close(fd);
             return result;
         }
