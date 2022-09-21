@@ -29,7 +29,7 @@ if (MOCK)
 endif()
 
 include(GNUInstallDirs)
-install(TARGETS thymesisf-cli thymesisf-agent)
+install(TARGETS thymesisf-cli thymesisf-agent DESTINATION bin)
 install(FILES thymesisf-agent@.service DESTINATION etc/systemd/system)
 
 enable_testing()
